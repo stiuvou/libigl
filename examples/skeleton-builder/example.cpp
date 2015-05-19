@@ -41,6 +41,7 @@
 #include <igl/file_exists.h>
 #include <igl/centroid.h>
 #include <igl/draw_skeleton_3d.h>
+//#include <igl/get_modifiers.h>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -317,7 +318,7 @@ void display()
         break;
     }
   };
-  
+
   if(!skeleton_on_top)
   {
     draw_skeleton();
@@ -428,7 +429,7 @@ std::vector<bool> selection_mask(const Eigen::VectorXi & sel, const int n)
 }
 
 bool ss_select(
-  const double mouse_x, 
+  const double mouse_x,
   const double mouse_y,
   const Eigen::MatrixXd & C,
   const bool accum,
