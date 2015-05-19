@@ -95,6 +95,28 @@ caution.
 You can keep up to date by cloning a read-only copy of our GitHub
 [repository](https://github.com/libigl).
 
+## Known Issues
+We really heavily on Eigen. Nearly all inputs and outputs are Eigen matrices of
+some kind. However, we currently _only_ support Eigen's default column-major
+ordering. That means, we **do not** expect our code to work for matrices using
+the `Eigen::RowMajor` flag. If you can, change definitions like:
+
+```cpp
+Eigen::Matrix<double, Eigen::Dynamic, 3, Eigen::RowMajor> A;
+```
+
+to
+
+```cpp
+Eigen::Matrix<double, Eigen::Dynamic, 3, Eigen::ColMajor> A;
+// or simply
+Eigen::Matrix<double, Eigen::Dynamic, 3> A;
+```
+
+We hope to fix this, or at least identify which functions are safe (many of
+them probably work just fine). This requires setting up unit testing, which is
+a major _todo_ for our development.
+
 ## How to contribute
 
 If you are interested in joining development, please fork the repository and
@@ -120,6 +142,27 @@ BibTeX entry:
   year = {2015},
 }
 ```
+
+## Projects/Universities using libigl
+
+ - [Spine by Esoteric Software](http://esotericsoftware.com/) is an animation tool dedicated to 2D characters.
+ - Columbia University, [Columbia Computer Graphics Group](http://www.cs.columbia.edu/cg/), USA
+ - [Cornell University](http://www.graphics.cornell.edu/), USA
+ - EPF Lausanne, [Computer Graphics and Geometry Laboratory](http://lgg.epfl.ch/people.php), Switzerland
+ - ETH Zurich, [Interactive Geometry Lab](http://igl.ethz.ch/) and [Advanced Technologies Lab](http://ait.inf.ethz.ch/), Swizterland
+ - George Mason University, [CraGL](http://cs.gmu.edu/~ygingold/), USA
+ - [Hong Kong University of Science and Technology](http://www.ust.hk/), USA
+ - [National Institute of Informatics](http://www.nii.ac.jp/en/), Japan 
+ - New York University, [Media Research Lab](http://mrl.nyu.edu/), USA
+ - NYUPoly, [Game Innovation Lab](http://game.engineering.nyu.edu/), USA
+ - [Telecom ParisTech](http://www.telecom-paristech.fr/en/formation-et-innovation-dans-le-numerique.html), Paris, France
+ - [TU Delft](http://www.tudelft.nl/en/), Netherlands
+ - [Universidade Federal de Santa Catarina](http://mtm.ufsc.br/~leo/), Brazil
+ - [Università della Svizzera Italiana](http://www.usi.ch/en), Switzerland
+ - [University College London](http://vecg.cs.ucl.ac.uk/), England
+ - [University of Cambridge](http://www.cam.ac.uk/), England
+ - [University of Pennsylvania](http://cg.cis.upenn.edu/), USA
+
 
 ## Contact
 

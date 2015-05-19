@@ -12,24 +12,27 @@
 #define IGL_OPENGL_4
 #endif
 
-#include <AntTweakBar.h>
-
 #include <vector>
 #include <string>
 #include <cstdint>
+
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+
+#include <AntTweakBar.h>
+
+#include <igl/igl_inline.h>
+
+#include "OpenGL_shader.h"
+#include "OpenGL_state.h"
+#include "ViewerCore.h"
+#include "ViewerData.h"
+#include "ViewerPlugin.h"
 
 #define IGL_MOD_SHIFT           0x0001
 #define IGL_MOD_CONTROL         0x0002
 #define IGL_MOD_ALT             0x0004
 #define IGL_MOD_SUPER           0x0008
-
-#include <Eigen/Core>
-#include <Eigen/Geometry>
-#include <igl/viewer/OpenGL_shader.h>
-#include <igl/viewer/OpenGL_state.h>
-#include <igl/viewer/ViewerCore.h>
-#include <igl/viewer/ViewerData.h>
-#include <igl/viewer/ViewerPlugin.h>
 
 namespace igl
 {
@@ -40,6 +43,10 @@ namespace igl
 
     IGL_INLINE int launch(std::string filename = "");
     IGL_INLINE void init();
+
+    // Stores command line arguments
+    int argc;
+    char **argv;
 
     // Stores all the viewing options
     igl::ViewerCore core;
@@ -105,16 +112,16 @@ namespace igl
     IGL_INLINE void resize(int w,int h);
 
 
-    // C-style callbacks
-    bool (*callback_init)(Viewer& viewer);
-    bool (*callback_pre_draw)(Viewer& viewer);
-    bool (*callback_post_draw)(Viewer& viewer);
-    bool (*callback_mouse_down)(Viewer& viewer, int button, int modifier);
-    bool (*callback_mouse_up)(Viewer& viewer, int button, int modifier);
-    bool (*callback_mouse_move)(Viewer& viewer, int mouse_x, int mouse_y);
-    bool (*callback_mouse_scroll)(Viewer& viewer, float delta_y);
-    bool (*callback_key_down)(Viewer& viewer, unsigned char key, int modifiers);
-    bool (*callback_key_up)(Viewer& viewer, unsigned char key, int modifiers);
+    // C++-style functions
+    std::function<bool(Viewer& viewer)> callback_init;
+    std::function<bool(Viewer& viewer)> callback_pre_draw;
+    std::function<bool(Viewer& viewer)> callback_post_draw;
+    std::function<bool(Viewer& viewer, int button, int modifier)> callback_mouse_down;
+    std::function<bool(Viewer& viewer, int button, int modifier)> callback_mouse_up;
+    std::function<bool(Viewer& viewer, int mouse_x, int mouse_y)> callback_mouse_move;
+    std::function<bool(Viewer& viewer, float delta_y)> callback_mouse_scroll;
+    std::function<bool(Viewer& viewer, unsigned char key, int modifiers)> callback_key_down;
+    std::function<bool(Viewer& viewer, unsigned char key, int modifiers)> callback_key_up;
 
     // Pointers to per-callback data
     void* callback_init_data;
