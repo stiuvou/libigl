@@ -1,7 +1,12 @@
-// Don't use static library for this example because of Mosek complications
+// If you don't have mosek installed and don't want to install it. Then
+// uncomment the following six lines.  Don't use static library for this
+// example because of Mosek complications
+//
 //#define IGL_NO_MOSEK
 //#ifdef IGL_NO_MOSEK
+//#ifdef IGL_STATIC_LIBRARY
 //#undef IGL_STATIC_LIBRARY
+//#endif
 //#endif
 #include <igl/boundary_conditions.h>
 #include <igl/colon.h>
@@ -17,6 +22,7 @@
 #include <igl/readTGF.h>
 #include <igl/viewer/Viewer.h>
 #include <igl/bbw/bbw.h>
+//#include <igl/embree/bone_heat.h>
 
 #include <Eigen/Geometry>
 #include <Eigen/StdVector>
@@ -105,6 +111,7 @@ bool key_down(igl::Viewer &viewer, unsigned char key, int mods)
       set_color(viewer);
       break;
   }
+  return true;
 }
 
 int main(int argc, char *argv[])
@@ -138,6 +145,16 @@ int main(int argc, char *argv[])
   {
     return false;
   }
+
+  //MatrixXd Vsurf = V.topLeftCorner(F.maxCoeff()+1,V.cols());
+  //MatrixXd Wsurf;
+  //if(!igl::bone_heat(Vsurf,F,C,VectorXi(),BE,MatrixXi(),Wsurf))
+  //{
+  //  return false;
+  //}
+  //W.setConstant(V.rows(),Wsurf.cols(),1);
+  //W.topLeftCorner(Wsurf.rows(),Wsurf.cols()) = Wsurf = Wsurf = Wsurf = Wsurf;
+
   // Normalize weights to sum to one
   igl::normalize_row_sums(W,W);
   // precompute linear blend skinning matrix

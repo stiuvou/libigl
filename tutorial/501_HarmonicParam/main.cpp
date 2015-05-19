@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 
   // Find the open boundary
   Eigen::VectorXi bnd;
-  igl::boundary_loop(V,F,bnd);
+  igl::boundary_loop(F,bnd);
 
   // Map the boundary to a circle, preserving edge proportions
   Eigen::MatrixXd bnd_uv;
@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 
   // Harmonic parametrization for the internal vertices
   igl::harmonic(V,F,bnd,bnd_uv,1,V_uv);
-
+  
   // Scale UV to make the texture more clear
   V_uv *= 5;
 

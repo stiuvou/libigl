@@ -1,16 +1,25 @@
+if(NOT CMAKELISTS_SHARED_INCLUDED)
+set(CMAKELISTS_SHARED_INCLUDED TRUE)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+find_package(OpenMP)
+if (OPENMP_FOUND AND NOT WIN32)
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
+
 SET(CMAKE_VERBOSE_MAKEFILE ON)
 
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake)
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake ${PROJECT_SOURCE_DIR}/cmake)
 set(CMAKE_COLOR_MAKEFILE ON)
 
 ############################
 ## SEPARATE BUILD OPTIONS ##
 ############################
 
-find_package(ANTTWEAKBAR REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(EIGEN REQUIRED)
 find_package(LIBIGL REQUIRED)
+find_package(ANTTWEAKBAR REQUIRED)
 find_package(GLFW REQUIRED)
 
 if(NOT APPLE)
@@ -57,6 +66,13 @@ link_directories(
 # Disable deprecated opengl code from libigl
 add_definitions(-DIGL_OPENGL_4)
 
+IF(CMAKE_BUILD_TYPE MATCHES RELEASE)
+    add_definitions(-DNDEBUG)
+ENDIF(CMAKE_BUILD_TYPE MATCHES RELEASE)
+
+#add_definitions(-DENABLE_XML_SERIALIZATION)
+
+
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -82,3 +98,4 @@ set(SHARED_LIBRARIES
 )
 
 #message(FATAL_ERROR ${SHARED_LIBRARIES})
+endif(NOT CMAKELISTS_SHARED_INCLUDED)

@@ -33,7 +33,7 @@ IGL_INLINE void igl::project_to_line(
   int np  = P.rows();
   // vector from source to destination
   MatL DmS = D-S;
-  double v_sqrlen = (double)(DmS.array().pow(2).sum());
+  double v_sqrlen = (double)(DmS.squaredNorm());
   assert(v_sqrlen != 0);
   // resize output
   t.resize(np,1);
@@ -48,7 +48,7 @@ IGL_INLINE void igl::project_to_line(
     t(i) = -(DmS.array()*SmPi.array()).sum() / v_sqrlen;
     // P projected onto line
     MatL projP = (1-t(i))*S + t(i)*D;
-    sqrD(i) = (Pi-projP).array().pow(2).sum();
+    sqrD(i) = (Pi-projP).squaredNorm();
   }
 }
 
@@ -123,4 +123,6 @@ template void igl::project_to_line<Eigen::Matrix<double, -1, -1, 0, -1, -1>, Eig
 template void igl::project_to_line<double>(double, double, double, double, double, double, double, double, double, double&, double&);
 template void igl::project_to_line<double>(double, double, double, double, double, double, double, double, double, double&, double&,double&,double&, double&);
 template void igl::project_to_line<Eigen::PlainObjectBase<Eigen::Matrix<double, 1, 3, 1, 1, 3> >, Eigen::PlainObjectBase<Eigen::Matrix<double, 1, 3, 1, 1, 3> >, Eigen::PlainObjectBase<Eigen::Matrix<double, 1, 1, 0, 1, 1> >, Eigen::PlainObjectBase<Eigen::Matrix<double, 1, 1, 0, 1, 1> > >(Eigen::PlainObjectBase<Eigen::Matrix<double, 1, 3, 1, 1, 3> > const&, Eigen::PlainObjectBase<Eigen::Matrix<double, 1, 3, 1, 1, 3> > const&, Eigen::PlainObjectBase<Eigen::Matrix<double, 1, 3, 1, 1, 3> > const&, Eigen::PlainObjectBase<Eigen::Matrix<double, 1, 1, 0, 1, 1> >&, Eigen::PlainObjectBase<Eigen::Matrix<double, 1, 1, 0, 1, 1> >&);
+template void igl::project_to_line<Eigen::PlainObjectBase<Eigen::Matrix<double, 1, 2, 1, 1, 2> >, Eigen::PlainObjectBase<Eigen::Matrix<double, 1, 2, 1, 1, 2> >, Eigen::PlainObjectBase<Eigen::Matrix<double, 1, 1, 0, 1, 1> >, Eigen::PlainObjectBase<Eigen::Matrix<double, 1, 1, 0, 1, 1> > >(Eigen::PlainObjectBase<Eigen::Matrix<double, 1, 2, 1, 1, 2> > const&, Eigen::PlainObjectBase<Eigen::Matrix<double, 1, 2, 1, 1, 2> > const&, Eigen::PlainObjectBase<Eigen::Matrix<double, 1, 2, 1, 1, 2> > const&, Eigen::PlainObjectBase<Eigen::Matrix<double, 1, 1, 0, 1, 1> >&, Eigen::PlainObjectBase<Eigen::Matrix<double, 1, 1, 0, 1, 1> >&);
+template void igl::project_to_line<Eigen::PlainObjectBase<Eigen::Matrix<double, -1, -1, 0, -1, -1> >, Eigen::PlainObjectBase<Eigen::Matrix<double, 3, 1, 0, 3, 1> >, Eigen::PlainObjectBase<Eigen::Matrix<double, -1, 1, 0, -1, 1> >, Eigen::PlainObjectBase<Eigen::Matrix<double, -1, 1, 0, -1, 1> > >(Eigen::PlainObjectBase<Eigen::Matrix<double, -1, -1, 0, -1, -1> > const&, Eigen::PlainObjectBase<Eigen::Matrix<double, 3, 1, 0, 3, 1> > const&, Eigen::PlainObjectBase<Eigen::Matrix<double, 3, 1, 0, 3, 1> > const&, Eigen::PlainObjectBase<Eigen::Matrix<double, -1, 1, 0, -1, 1> >&, Eigen::PlainObjectBase<Eigen::Matrix<double, -1, 1, 0, -1, 1> >&);
 #endif

@@ -45,6 +45,7 @@ IGL_INLINE void igl::point_mesh_squared_distance_precompute(
   using namespace std;
 
   typedef CGAL::Triangle_3<Kernel> Triangle_3; 
+  typedef CGAL::Point_3<Kernel> Point_3; 
   typedef typename std::vector<Triangle_3>::iterator Iterator;
   typedef CGAL::AABB_triangle_primitive<Kernel, Iterator> Primitive;
   typedef CGAL::AABB_traits<Kernel, Primitive> AABB_triangle_traits;
@@ -54,11 +55,26 @@ IGL_INLINE void igl::point_mesh_squared_distance_precompute(
   assert(V.cols() == 3);
   // Must be triangles
   assert(F.cols() == 3);
+
+  // WTF ALERT!!!! 
+  //
+  // There's a bug in clang probably or at least in cgal. Without calling this
+  // line (I guess invoking some compilation from <vector>), clang will vomit
+  // errors inside CGAL.
+  //
+  // http://stackoverflow.com/questions/27748442/is-clangs-c11-support-reliable
+  T.reserve(0);
+
   // Make list of cgal triangles
   mesh_to_cgal_triangle_list(V,F,T);
   tree.clear();
   tree.insert(T.begin(),T.end());
   tree.accelerate_distance_queries();
+  // accelerate_distance_queries doesn't seem actually to do _all_ of the
+  // precomputation. the tree (despite being const) will still do more
+  // precomputation and reorganizing on the first call of `closest_point` or
+  // `closest_point_and_primitive`. Therefor, call it once here.
+  tree.closest_point_and_primitive(Point_3(0,0,0));
 }
 
 template <typename Kernel>
@@ -104,7 +120,7 @@ IGL_INLINE void igl::point_mesh_squared_distance(
 
 #ifdef IGL_STATIC_LIBRARY
 // Explicit template specialization
-template void igl::point_mesh_squared_distance<CGAL::Epeck>( const Eigen::MatrixXd & P, const Eigen::MatrixXd & V, const Eigen::MatrixXi & F, Eigen::VectorXd & sqrD, Eigen::VectorXi & I, Eigen::MatrixXd & C);
 template void igl::point_mesh_squared_distance_precompute<CGAL::Epick>(Eigen::Matrix<double, -1, -1, 0, -1, -1> const&, Eigen::Matrix<int, -1, -1, 0, -1, -1> const&, CGAL::AABB_tree<CGAL::AABB_traits<CGAL::Epick, CGAL::AABB_triangle_primitive<CGAL::Epick, std::vector<CGAL::Triangle_3<CGAL::Epick>, std::allocator<CGAL::Triangle_3<CGAL::Epick> > >::iterator, CGAL::Boolean_tag<false> > > >&, std::vector<CGAL::Triangle_3<CGAL::Epick>, std::allocator<CGAL::Triangle_3<CGAL::Epick> > >&);
-
+template void igl::point_mesh_squared_distance<CGAL::Epeck>( const Eigen::MatrixXd & P, const Eigen::MatrixXd & V, const Eigen::MatrixXi & F, Eigen::VectorXd & sqrD, Eigen::VectorXi & I, Eigen::MatrixXd & C);
+template void igl::point_mesh_squared_distance<CGAL::Epick>(Eigen::Matrix<double, -1, -1, 0, -1, -1> const&, Eigen::Matrix<double, -1, -1, 0, -1, -1> const&, Eigen::Matrix<int, -1, -1, 0, -1, -1> const&, Eigen::Matrix<double, -1, 1, 0, -1, 1>&, Eigen::Matrix<int, -1, 1, 0, -1, 1>&, Eigen::Matrix<double, -1, -1, 0, -1, -1>&);
 #endif

@@ -29,9 +29,27 @@ namespace igl
   // or 
   //     CGAL::Exact_predicates_exact_constructions_kernel
 
-  template <typename Kernel>
+  template <
+    typename Kernel,
+    typename DerivedV,
+    typename DerivedF,
+    typename DerivedVV,
+    typename DerivedFF,
+    typename DerivedIF,
+    typename DerivedJ,
+    typename DerivedIM>
   class SelfIntersectMesh
   {
+    typedef 
+      SelfIntersectMesh<
+      Kernel,
+      DerivedV,
+      DerivedF,
+      DerivedVV,
+      DerivedFF,
+      DerivedIF,
+      DerivedJ,
+      DerivedIM> Self;
     public:
       // 3D Primitives
       typedef CGAL::Point_3<Kernel>    Point_3;
@@ -39,8 +57,8 @@ namespace igl
       typedef CGAL::Triangle_3<Kernel> Triangle_3; 
       typedef CGAL::Plane_3<Kernel>    Plane_3;
       typedef CGAL::Tetrahedron_3<Kernel> Tetrahedron_3; 
-      typedef CGAL::Polyhedron_3<Kernel> Polyhedron_3; 
-      typedef CGAL::Nef_polyhedron_3<Kernel> Nef_polyhedron_3; 
+      //typedef CGAL::Polyhedron_3<Kernel> Polyhedron_3; 
+      //typedef CGAL::Nef_polyhedron_3<Kernel> Nef_polyhedron_3; 
       // 2D Primitives
       typedef CGAL::Point_2<Kernel>    Point_2;
       typedef CGAL::Segment_2<Kernel>  Segment_2; 
@@ -62,21 +80,24 @@ namespace igl
         Box;
 
       // Input mesh
-      const Eigen::MatrixXd & V;
-      const Eigen::MatrixXi & F;
+      const Eigen::PlainObjectBase<DerivedV> & V;
+      const Eigen::PlainObjectBase<DerivedF> & F;
       // Number of self-intersecting triangle pairs
-      int count;
-      std::vector<std::list<CGAL::Object> > F_objects;
+      typedef typename DerivedF::Index Index;
+      Index count;
+      typedef std::vector<CGAL::Object> ObjectList;
+      std::vector<ObjectList > F_objects;
       Triangles T;
-      std::list<int> lIF;
+      typedef std::vector<Index> IndexList;
+      IndexList lIF;
       std::vector<bool> offensive;
-      std::vector<int> offending_index;
-      std::vector<int> offending;
+      std::vector<Index> offending_index;
+      std::vector<Index> offending;
       // Make a short name for the edge map's key
-      typedef std::pair<int,int> EMK;
+      typedef std::pair<Index,Index> EMK;
       // Make a short name for the type stored at each edge, the edge map's
       // value
-      typedef std::list<int> EMV;
+      typedef std::vector<Index> EMV;
       // Make a short name for the edge map
       typedef std::map<EMK,EMV> EdgeMap;
       EdgeMap edge2faces;
@@ -88,27 +109,26 @@ namespace igl
       //
       // See also: remesh_self_intersections.h
       inline SelfIntersectMesh(
-        const Eigen::MatrixXd & V,
-        const Eigen::MatrixXi & F,
-        const RemeshSelfIntersectionsParam & params,
-        Eigen::MatrixXd & VV,
-        Eigen::MatrixXi & FF,
-        Eigen::MatrixXi & IF,
-        Eigen::VectorXi & J,
-        Eigen::VectorXi & IM
-        );
+          const Eigen::PlainObjectBase<DerivedV> & V,
+          const Eigen::PlainObjectBase<DerivedF> & F,
+          const RemeshSelfIntersectionsParam & params,
+          Eigen::PlainObjectBase<DerivedVV> & VV,
+          Eigen::PlainObjectBase<DerivedFF> & FF,
+          Eigen::PlainObjectBase<DerivedIF> & IF,
+          Eigen::PlainObjectBase<DerivedJ> & J,
+          Eigen::PlainObjectBase<DerivedIM> & IM);
     private:
       // Helper function to mark a face as offensive
       //
       // Inputs:
       //   f  index of face in F
-      inline void mark_offensive(const int f);
+      inline void mark_offensive(const Index f);
       // Helper function to count intersections between faces
       //
       // Input:
       //   fa  index of face A in F
       //   fb  index of face B in F
-      inline void count_intersection(const int fa,const int fb);
+      inline void count_intersection( const Index fa, const Index fb);
       // Helper function for box_intersect. Intersect two triangles A and B,
       // append the intersection object (point,segment,triangle) to a running
       // list for A and B
@@ -123,8 +143,8 @@ namespace igl
       inline bool intersect(
           const Triangle_3 & A, 
           const Triangle_3 & B, 
-          const int fa,
-          const int fb);
+          const Index fa,
+          const Index fb);
       // Helper function for box_intersect. In the case where A and B have
       // already been identified to share a vertex, then we only want to add
       // possible segment intersections. Assumes truly duplicate triangles are
@@ -143,17 +163,17 @@ namespace igl
       inline bool single_shared_vertex(
           const Triangle_3 & A,
           const Triangle_3 & B,
-          const int fa,
-          const int fb,
-          const int va,
-          const int vb);
+          const Index fa,
+          const Index fb,
+          const Index va,
+          const Index vb);
       // Helper handling one direction
       inline bool single_shared_vertex(
           const Triangle_3 & A,
           const Triangle_3 & B,
-          const int fa,
-          const int fb,
-          const int va);
+          const Index fa,
+          const Index fb,
+          const Index va);
       // Helper function for box_intersect. In the case where A and B have
       // already been identified to share two vertices, then we only want to add
       // a possible coplanar (Triangle) intersection. Assumes truly degenerate
@@ -161,8 +181,8 @@ namespace igl
       inline bool double_shared_vertex(
           const Triangle_3 & A,
           const Triangle_3 & B,
-          const int fa,
-          const int fb);
+          const Index fa,
+          const Index fb);
 
     public:
       // Callback function called during box self intersections test. Means
@@ -187,15 +207,15 @@ namespace igl
       //   cdt  Contrained delaunay triangulation in projected 2D plane
       inline void projected_delaunay(
           const Triangle_3 & A,
-          const std::list<CGAL::Object> & A_objects_3,
+          const ObjectList & A_objects_3,
           CDT_plus_2 & cdt);
       // Getters:
     public:
-      //const std::list<int>& get_lIF() const{ return lIF;}
-      static inline void box_intersect(
+      //const IndexList& get_lIF() const{ return lIF;}
+      static inline void box_intersect_static(
         SelfIntersectMesh * SIM, 
-        const SelfIntersectMesh::Box &a, 
-        const SelfIntersectMesh::Box &b);
+        const Box &a, 
+        const Box &b);
   };
 }
 
@@ -204,11 +224,11 @@ namespace igl
 #include "mesh_to_cgal_triangle_list.h"
 
 #include <igl/REDRUM.h>
+#include <igl/get_seconds.h>
 #include <igl/C_STR.h>
 
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
 
+#include <functional>
 #include <algorithm>
 #include <exception>
 #include <cassert>
@@ -239,25 +259,57 @@ namespace igl
 //  boost::function<void(const Box &a,const Box &b)> cb
 //    = boost::bind(&::box_intersect, this, _1,_2);
 //   
-template <typename Kernel>
-inline void igl::SelfIntersectMesh<Kernel>::box_intersect(
-  igl::SelfIntersectMesh<Kernel> * SIM, 
-  const typename igl::SelfIntersectMesh<Kernel>::Box &a, 
-  const typename igl::SelfIntersectMesh<Kernel>::Box &b)
+template <
+  typename Kernel,
+  typename DerivedV,
+  typename DerivedF,
+  typename DerivedVV,
+  typename DerivedFF,
+  typename DerivedIF,
+  typename DerivedJ,
+  typename DerivedIM>
+inline void igl::SelfIntersectMesh<
+  Kernel,
+  DerivedV,
+  DerivedF,
+  DerivedVV,
+  DerivedFF,
+  DerivedIF,
+  DerivedJ,
+  DerivedIM>::box_intersect_static(
+  Self * SIM, 
+  const typename Self::Box &a, 
+  const typename Self::Box &b)
 {
   SIM->box_intersect(a,b);
 }
 
-template <typename Kernel>
-inline igl::SelfIntersectMesh<Kernel>::SelfIntersectMesh(
-  const Eigen::MatrixXd & V,
-  const Eigen::MatrixXi & F,
+template <
+  typename Kernel,
+  typename DerivedV,
+  typename DerivedF,
+  typename DerivedVV,
+  typename DerivedFF,
+  typename DerivedIF,
+  typename DerivedJ,
+  typename DerivedIM>
+inline igl::SelfIntersectMesh<
+  Kernel,
+  DerivedV,
+  DerivedF,
+  DerivedVV,
+  DerivedFF,
+  DerivedIF,
+  DerivedJ,
+  DerivedIM>::SelfIntersectMesh(
+  const Eigen::PlainObjectBase<DerivedV> & V,
+  const Eigen::PlainObjectBase<DerivedF> & F,
   const RemeshSelfIntersectionsParam & params,
-  Eigen::MatrixXd & VV,
-  Eigen::MatrixXi & FF,
-  Eigen::MatrixXi & IF,
-  Eigen::VectorXi & J,
-  Eigen::VectorXi & IM):
+  Eigen::PlainObjectBase<DerivedVV> & VV,
+  Eigen::PlainObjectBase<DerivedFF> & FF,
+  Eigen::PlainObjectBase<DerivedIF> & IF,
+  Eigen::PlainObjectBase<DerivedJ> & J,
+  Eigen::PlainObjectBase<DerivedIM> & IM):
   V(V),
   F(F),
   count(0),
@@ -272,8 +324,19 @@ inline igl::SelfIntersectMesh<Kernel>::SelfIntersectMesh(
 {
   using namespace std;
   using namespace Eigen;
+
+  //const auto & tictoc = []()
+  //{
+  //  static double t_start = igl::get_seconds();
+  //  double diff = igl::get_seconds()-t_start;
+  //  t_start += diff;
+  //  return diff;
+  //};
+  //tictoc();
+
   // Compute and process self intersections
   mesh_to_cgal_triangle_list(V,F,T);
+  //cout<<"mesh_to_cgal_triangle_list: "<<tictoc()<<endl;
   // http://www.cgal.org/Manual/latest/doc_html/cgal_manual/Box_intersection_d/Chapter_main.html#Section_63.5 
   // Create the corresponding vector of bounding boxes
   std::vector<Box> boxes;
@@ -286,8 +349,13 @@ inline igl::SelfIntersectMesh<Kernel>::SelfIntersectMesh(
     boxes.push_back(Box(tit->bbox(), tit));
   }
   // Leapfrog callback
-  boost::function<void(const Box &a,const Box &b)> cb
-    = boost::bind(&box_intersect, this, _1,_2);
+  std::function<void(const Box &a,const Box &b)> cb = 
+    std::bind(&box_intersect_static, this, 
+      // Explicitly use std namespace to avoid confusion with boost (who puts
+      // _1 etc. in global namespace)
+      std::placeholders::_1,
+      std::placeholders::_2);
+  //cout<<"boxes and bind: "<<tictoc()<<endl;
   // Run the self intersection algorithm with all defaults
   try{
     CGAL::box_self_intersection_d(boxes.begin(), boxes.end(),cb);
@@ -300,14 +368,15 @@ inline igl::SelfIntersectMesh<Kernel>::SelfIntersectMesh(
     }
     // Otherwise just fall through
   }
+  //cout<<"box_self_intersection_d: "<<tictoc()<<endl;
 
   // Convert lIF to Eigen matrix
   assert(lIF.size()%2 == 0);
   IF.resize(lIF.size()/2,2);
   {
-    int i=0;
+    Index i=0;
     for(
-      typename list<int>::const_iterator ifit = lIF.begin();
+      typename IndexList::const_iterator ifit = lIF.begin();
       ifit!=lIF.end();
       )
     {
@@ -318,6 +387,7 @@ inline igl::SelfIntersectMesh<Kernel>::SelfIntersectMesh(
       i++;
     }
   }
+  //cout<<"IF: "<<tictoc()<<endl;
 
   if(params.detect_only)
   {
@@ -326,20 +396,29 @@ inline igl::SelfIntersectMesh<Kernel>::SelfIntersectMesh(
 
   int NF_count = 0;
   // list of new faces, we'll fix F later
-  vector<MatrixXi> NF(offending.size());
+  vector<
+    typename Eigen::Matrix<typename DerivedFF::Scalar,Dynamic,Dynamic>
+    > NF(offending.size());
   // list of new vertices
-  list<Point_3> NV;
-  int NV_count = 0;
+  typedef vector<Point_3> Point_3List;
+  Point_3List NV;
+  Index NV_count = 0;
   vector<CDT_plus_2> cdt(offending.size());
   vector<Plane_3> P(offending.size());
   // Use map for *all* faces
-  map<typename CDT_plus_2::Vertex_handle,int> v2i;
+  map<typename CDT_plus_2::Vertex_handle,Index> v2i;
   // Loop over offending triangles
-  for(int o = 0;o<(int)offending.size();o++)
+  const size_t noff = offending.size();
+  // Unfortunately it looks like CGAL has trouble allocating memory when
+  // multiple openmp threads are running. Crashes durring CDT...
+//# pragma omp parallel for if (noff>1000)
+  for(Index o = 0;o<(Index)noff;o++)
   {
     // index in F
-    const int f = offending[o];
-    projected_delaunay(T[f],F_objects[f],cdt[o]);
+    const Index f = offending[o];
+    {
+      projected_delaunay(T[f],F_objects[f],cdt[o]);
+    }
     // Q: Is this also delaunay in 3D?
     // A: No, because the projection is affine and delaunay is not affine
     // invariant.
@@ -349,7 +428,7 @@ inline igl::SelfIntersectMesh<Kernel>::SelfIntersectMesh(
     P[o] = Plane_3(T[f].vertex(0),T[f].vertex(1),T[f].vertex(2));
     // Build index map
     {
-      int i=0;
+      Index i=0;
       for(
         typename CDT_plus_2::Finite_vertices_iterator vit = cdt[o].finite_vertices_begin();
         vit != cdt[o].finite_vertices_end();
@@ -367,6 +446,7 @@ inline igl::SelfIntersectMesh<Kernel>::SelfIntersectMesh(
           assert(T[f].vertex(i) == P[o].to_3d(vit->point()));
 #endif
           // For first three, use original index in F
+//#   pragma omp critical
           v2i[vit] = F(f,i);
         }else
         {
@@ -377,8 +457,8 @@ inline igl::SelfIntersectMesh<Kernel>::SelfIntersectMesh(
           for(int e = 0; e<3 && !found;e++)
           {
             // Index of F's eth edge in V
-            int i = F(f,(e+1)%3);
-            int j = F(f,(e+2)%3);
+            Index i = F(f,(e+1)%3);
+            Index j = F(f,(e+2)%3);
             // Be sure that i<j
             if(i>j)
             {
@@ -387,7 +467,7 @@ inline igl::SelfIntersectMesh<Kernel>::SelfIntersectMesh(
             assert(edge2faces.count(EMK(i,j))==1);
             // loop over neighbors
             for(
-              list<int>::const_iterator nit = edge2faces[EMK(i,j)].begin();
+              typename IndexList::const_iterator nit = edge2faces[EMK(i,j)].begin();
               nit != edge2faces[EMK(i,j)].end() && !found;
               nit++)
             {
@@ -397,7 +477,7 @@ inline igl::SelfIntersectMesh<Kernel>::SelfIntersectMesh(
                 continue;
               }
               // index of neighbor in offending (to find its cdt)
-              int no = offending_index[*nit];
+              Index no = offending_index[*nit];
               // Loop over vertices of that neighbor's cdt (might not have been
               // processed yet, but then it's OK because it'll just be empty)
               for(
@@ -408,6 +488,7 @@ inline igl::SelfIntersectMesh<Kernel>::SelfIntersectMesh(
                 if(vit_point_3 == P[no].to_3d(uit->point()))
                 {
                   assert(v2i.count(uit) == 1);
+//#   pragma omp critical
                   v2i[vit] = v2i[uit];
                   found = true;
                 }
@@ -416,18 +497,22 @@ inline igl::SelfIntersectMesh<Kernel>::SelfIntersectMesh(
           }
           if(!found)
           {
-            v2i[vit] = V.rows()+NV_count;
-            NV.push_back(vit_point_3);
-            NV_count++;
+//#   pragma omp critical
+            {
+              v2i[vit] = V.rows()+NV_count;
+              NV.push_back(vit_point_3);
+              NV_count++;
+            }
           }
         }
         i++;
       }
     }
     {
-      int i = 0;
+      Index i = 0;
       // Resize to fit new number of triangles
       NF[o].resize(cdt[o].number_of_faces(),3);
+//#   pragma omp atomic
       NF_count+=NF[o].rows();
       // Append new faces to NF
       for(
@@ -442,16 +527,17 @@ inline igl::SelfIntersectMesh<Kernel>::SelfIntersectMesh(
       }
     }
   }
-  assert(NV_count == (int)NV.size());
+  //cout<<"CDT: "<<tictoc()<<"  "<<t_proj_del<<endl;
+  assert(NV_count == (Index)NV.size());
   // Build output
 #ifndef NDEBUG
   {
-    int off_count = 0;
-    for(int f = 0;f<F.rows();f++)
+    Index off_count = 0;
+    for(Index f = 0;f<F.rows();f++)
     {
       off_count+= (offensive[f]?1:0);
     }
-    assert(off_count==(int)offending.size());
+    assert(off_count==(Index)offending.size());
   }
 #endif
   // Append faces
@@ -459,8 +545,8 @@ inline igl::SelfIntersectMesh<Kernel>::SelfIntersectMesh(
   J.resize(FF.rows());
   // First append non-offending original faces
   // There's an Eigen way to do this in one line but I forget
-  int off = 0;
-  for(int f = 0;f<F.rows();f++)
+  Index off = 0;
+  for(Index f = 0;f<F.rows();f++)
   {
     if(!offensive[f])
     {
@@ -469,9 +555,9 @@ inline igl::SelfIntersectMesh<Kernel>::SelfIntersectMesh(
       off++;
     }
   }
-  assert(off == (int)(F.rows()-offending.size()));
+  assert(off == (Index)(F.rows()-offending.size()));
   // Now append replacement faces for offending faces
-  for(int o = 0;o<(int)offending.size();o++)
+  for(Index o = 0;o<(Index)offending.size();o++)
   {
     FF.block(off,0,NF[o].rows(),3) = NF[o];
     J.block(off,0,NF[o].rows(),1).setConstant(offending[o]);
@@ -481,13 +567,13 @@ inline igl::SelfIntersectMesh<Kernel>::SelfIntersectMesh(
   VV.resize(V.rows()+NV_count,3);
   VV.block(0,0,V.rows(),3) = V;
   {
-    int i = 0;
+    Index i = 0;
     for(
-      typename list<Point_3>::const_iterator nvit = NV.begin();
+      typename Point_3List::const_iterator nvit = NV.begin();
       nvit != NV.end();
       nvit++)
     {
-      for(int d = 0;d<3;d++)
+      for(Index d = 0;d<3;d++)
       {
         const Point_3 & p = *nvit;
         VV(V.rows()+i,d) = CGAL::to_double(p[d]);
@@ -502,10 +588,10 @@ inline igl::SelfIntersectMesh<Kernel>::SelfIntersectMesh(
     }
   }
   IM.resize(VV.rows(),1);
-  map<Point_3,int> vv2i;
+  map<Point_3,Index> vv2i;
   // Safe to check for duplicates using double for original vertices: if
   // incoming reps are different then the points are unique.
-  for(int v = 0;v<V.rows();v++)
+  for(Index v = 0;v<V.rows();v++)
   {
     const Point_3 p(V(v,0),V(v,1),V(v,2));
     if(vv2i.count(p)==0)
@@ -517,9 +603,9 @@ inline igl::SelfIntersectMesh<Kernel>::SelfIntersectMesh(
   }
   // Must check for duplicates of new vertices using exact.
   {
-    int v = V.rows();
+    Index v = V.rows();
     for(
-      typename list<Point_3>::const_iterator nvit = NV.begin();
+      typename Point_3List::const_iterator nvit = NV.begin();
       nvit != NV.end();
       nvit++)
     {
@@ -533,6 +619,7 @@ inline igl::SelfIntersectMesh<Kernel>::SelfIntersectMesh(
       v++;
     }
   }
+  //cout<<"Output + dupes: "<<tictoc()<<endl;
 
   // Q: Does this give the same result as TETGEN?
   // A: For the cow and beast, yes.
@@ -547,8 +634,24 @@ inline igl::SelfIntersectMesh<Kernel>::SelfIntersectMesh(
 }
 
 
-template <typename Kernel>
-inline void igl::SelfIntersectMesh<Kernel>::mark_offensive(const int f)
+template <
+  typename Kernel,
+  typename DerivedV,
+  typename DerivedF,
+  typename DerivedVV,
+  typename DerivedFF,
+  typename DerivedIF,
+  typename DerivedJ,
+  typename DerivedIM>
+inline void igl::SelfIntersectMesh<
+  Kernel,
+  DerivedV,
+  DerivedF,
+  DerivedVV,
+  DerivedFF,
+  DerivedIF,
+  DerivedJ,
+  DerivedIM>::mark_offensive(const Index f)
 {
   using namespace std;
   lIF.push_back(f);
@@ -558,11 +661,11 @@ inline void igl::SelfIntersectMesh<Kernel>::mark_offensive(const int f)
     offending_index[f]=offending.size();
     offending.push_back(f);
     // Add to edge map
-    for(int e = 0; e<3;e++)
+    for(Index e = 0; e<3;e++)
     {
       // Index of F's eth edge in V
-      int i = F(f,(e+1)%3);
-      int j = F(f,(e+2)%3);
+      Index i = F(f,(e+1)%3);
+      Index j = F(f,(e+2)%3);
       // Be sure that i<j
       if(i>j)
       {
@@ -571,7 +674,7 @@ inline void igl::SelfIntersectMesh<Kernel>::mark_offensive(const int f)
       // Create new list if there is no entry
       if(edge2faces.count(EMK(i,j))==0)
       {
-        edge2faces[EMK(i,j)] = list<int>();
+        edge2faces[EMK(i,j)] = EMV();
       }
       // append to list
       edge2faces[EMK(i,j)].push_back(f);
@@ -579,10 +682,26 @@ inline void igl::SelfIntersectMesh<Kernel>::mark_offensive(const int f)
   }
 }
 
-template <typename Kernel>
-inline void igl::SelfIntersectMesh<Kernel>::count_intersection(
-  const int fa,
-  const int fb)
+template <
+  typename Kernel,
+  typename DerivedV,
+  typename DerivedF,
+  typename DerivedVV,
+  typename DerivedFF,
+  typename DerivedIF,
+  typename DerivedJ,
+  typename DerivedIM>
+inline void igl::SelfIntersectMesh<
+  Kernel,
+  DerivedV,
+  DerivedF,
+  DerivedVV,
+  DerivedFF,
+  DerivedIF,
+  DerivedJ,
+  DerivedIM>::count_intersection(
+  const Index fa,
+  const Index fb)
 {
   mark_offensive(fa);
   mark_offensive(fb);
@@ -594,12 +713,28 @@ inline void igl::SelfIntersectMesh<Kernel>::count_intersection(
   }
 }
 
-template <typename Kernel>
-inline bool igl::SelfIntersectMesh<Kernel>::intersect(
+template <
+  typename Kernel,
+  typename DerivedV,
+  typename DerivedF,
+  typename DerivedVV,
+  typename DerivedFF,
+  typename DerivedIF,
+  typename DerivedJ,
+  typename DerivedIM>
+inline bool igl::SelfIntersectMesh<
+  Kernel,
+  DerivedV,
+  DerivedF,
+  DerivedVV,
+  DerivedFF,
+  DerivedIF,
+  DerivedJ,
+  DerivedIM>::intersect(
   const Triangle_3 & A, 
   const Triangle_3 & B, 
-  const int fa,
-  const int fb)
+  const Index fa,
+  const Index fb)
 {
   // Determine whether there is an intersection
   if(!CGAL::do_intersect(A,B))
@@ -617,14 +752,30 @@ inline bool igl::SelfIntersectMesh<Kernel>::intersect(
   return true;
 }
 
-template <typename Kernel>
-inline bool igl::SelfIntersectMesh<Kernel>::single_shared_vertex(
+template <
+  typename Kernel,
+  typename DerivedV,
+  typename DerivedF,
+  typename DerivedVV,
+  typename DerivedFF,
+  typename DerivedIF,
+  typename DerivedJ,
+  typename DerivedIM>
+inline bool igl::SelfIntersectMesh<
+  Kernel,
+  DerivedV,
+  DerivedF,
+  DerivedVV,
+  DerivedFF,
+  DerivedIF,
+  DerivedJ,
+  DerivedIM>::single_shared_vertex(
   const Triangle_3 & A,
   const Triangle_3 & B,
-  const int fa,
-  const int fb,
-  const int va,
-  const int vb)
+  const Index fa,
+  const Index fb,
+  const Index va,
+  const Index vb)
 {
   ////using namespace std;
   //CGAL::Object result = CGAL::intersection(A,B);
@@ -647,13 +798,29 @@ inline bool igl::SelfIntersectMesh<Kernel>::single_shared_vertex(
   return single_shared_vertex(B,A,fb,fa,vb);
 }
 
-template <typename Kernel>
-inline bool igl::SelfIntersectMesh<Kernel>::single_shared_vertex(
+template <
+  typename Kernel,
+  typename DerivedV,
+  typename DerivedF,
+  typename DerivedVV,
+  typename DerivedFF,
+  typename DerivedIF,
+  typename DerivedJ,
+  typename DerivedIM>
+inline bool igl::SelfIntersectMesh<
+  Kernel,
+  DerivedV,
+  DerivedF,
+  DerivedVV,
+  DerivedFF,
+  DerivedIF,
+  DerivedJ,
+  DerivedIM>::single_shared_vertex(
   const Triangle_3 & A,
   const Triangle_3 & B,
-  const int fa,
-  const int fb,
-  const int va)
+  const Index fa,
+  const Index fb,
+  const Index va)
 {
   // This was not a good idea. It will not handle coplanar triangles well.
   using namespace std;
@@ -712,12 +879,28 @@ inline bool igl::SelfIntersectMesh<Kernel>::single_shared_vertex(
 }
 
 
-template <typename Kernel>
-inline bool igl::SelfIntersectMesh<Kernel>::double_shared_vertex(
+template <
+  typename Kernel,
+  typename DerivedV,
+  typename DerivedF,
+  typename DerivedVV,
+  typename DerivedFF,
+  typename DerivedIF,
+  typename DerivedJ,
+  typename DerivedIM>
+inline bool igl::SelfIntersectMesh<
+  Kernel,
+  DerivedV,
+  DerivedF,
+  DerivedVV,
+  DerivedFF,
+  DerivedIF,
+  DerivedJ,
+  DerivedIM>::double_shared_vertex(
   const Triangle_3 & A,
   const Triangle_3 & B,
-  const int fa,
-  const int fb)
+  const Index fa,
+  const Index fb)
 {
   using namespace std;
   // Cheaper way to do this than calling do_intersect?
@@ -730,8 +913,9 @@ inline bool igl::SelfIntersectMesh<Kernel>::double_shared_vertex(
     // Construct intersection
     try
     {
+      // This can fail for Epick but not Epeck
       CGAL::Object result = CGAL::intersection(A,B);
-      if(result)
+      if(!result.empty())
       {
         if(CGAL::object_cast<Segment_3 >(&result))
         {
@@ -775,15 +959,38 @@ inline bool igl::SelfIntersectMesh<Kernel>::double_shared_vertex(
   return false;
 }
 
-template <typename Kernel>
-inline void igl::SelfIntersectMesh<Kernel>::box_intersect(
+template <
+  typename Kernel,
+  typename DerivedV,
+  typename DerivedF,
+  typename DerivedVV,
+  typename DerivedFF,
+  typename DerivedIF,
+  typename DerivedJ,
+  typename DerivedIM>
+inline void igl::SelfIntersectMesh<
+  Kernel,
+  DerivedV,
+  DerivedF,
+  DerivedVV,
+  DerivedFF,
+  DerivedIF,
+  DerivedJ,
+  DerivedIM>::box_intersect(
   const Box& a, 
   const Box& b)
 {
   using namespace std;
+  // Could we write this as a static function of:
+  //
+  // F.row(fa)
+  // F.row(fb)
+  // A
+  // B
+
   // index in F and T
-  int fa = a.handle()-T.begin();
-  int fb = b.handle()-T.begin();
+  Index fa = a.handle()-T.begin();
+  Index fb = b.handle()-T.begin();
   const Triangle_3 & A = *a.handle();
   const Triangle_3 & B = *b.handle();
   // I'm not going to deal with degenerate triangles, though at some point we
@@ -791,14 +998,14 @@ inline void igl::SelfIntersectMesh<Kernel>::box_intersect(
   assert(!a.handle()->is_degenerate());
   assert(!b.handle()->is_degenerate());
   // Number of combinatorially shared vertices
-  int comb_shared_vertices = 0;
+  Index comb_shared_vertices = 0;
   // Number of geometrically shared vertices (*not* including combinatorially
   // shared)
-  int geo_shared_vertices = 0;
+  Index geo_shared_vertices = 0;
   // Keep track of shared vertex indices (we only handles single shared
   // vertices as a special case, so just need last/first/only ones)
-  int va=-1,vb=-1;
-  int ea,eb;
+  Index va=-1,vb=-1;
+  Index ea,eb;
   for(ea=0;ea<3;ea++)
   {
     for(eb=0;eb<3;eb++)
@@ -816,7 +1023,7 @@ inline void igl::SelfIntersectMesh<Kernel>::box_intersect(
       }
     }
   }
-  const int total_shared_vertices = comb_shared_vertices + geo_shared_vertices;
+  const Index total_shared_vertices = comb_shared_vertices + geo_shared_vertices;
   if(comb_shared_vertices== 3)
   {
     // Combinatorially duplicate face, these should be removed by preprocessing
@@ -906,10 +1113,26 @@ done:
 //   A_objects_3  updated list of intersection objects for A
 // Outputs:
 //   cdt  Contrained delaunay triangulation in projected 2D plane
-template <typename Kernel>
-inline void igl::SelfIntersectMesh<Kernel>::projected_delaunay(
+template <
+  typename Kernel,
+  typename DerivedV,
+  typename DerivedF,
+  typename DerivedVV,
+  typename DerivedFF,
+  typename DerivedIF,
+  typename DerivedJ,
+  typename DerivedIM>
+inline void igl::SelfIntersectMesh<
+  Kernel,
+  DerivedV,
+  DerivedF,
+  DerivedVV,
+  DerivedFF,
+  DerivedIF,
+  DerivedJ,
+  DerivedIM>::projected_delaunay(
   const Triangle_3 & A,
-  const std::list<CGAL::Object> & A_objects_3,
+  const ObjectList & A_objects_3,
   CDT_plus_2 & cdt)
 {
   using namespace std;
@@ -918,30 +1141,26 @@ inline void igl::SelfIntersectMesh<Kernel>::projected_delaunay(
   Plane_3 P(A.vertex(0),A.vertex(1),A.vertex(2));
   // Insert triangle into vertices
   typename CDT_plus_2::Vertex_handle corners[3];
-  for(int i = 0;i<3;i++)
+  for(Index i = 0;i<3;i++)
   {
     corners[i] = cdt.insert(P.to_2d(A.vertex(i)));
   }
   // Insert triangle edges as constraints
-  for(int i = 0;i<3;i++)
+  for(Index i = 0;i<3;i++)
   {
     cdt.insert_constraint( corners[(i+1)%3], corners[(i+2)%3]);
   }
   // Insert constraints for intersection objects
-  for(
-    typename list<CGAL::Object>::const_iterator lit = A_objects_3.begin();
-    lit != A_objects_3.end();
-    lit++)
+  for( const auto & obj : A_objects_3)
   {
-    CGAL::Object obj = *lit;
-    if(const Point_3 *ipoint = CGAL::object_cast<Point_3 >(&obj))
-    {
-      // Add point
-      cdt.insert(P.to_2d(*ipoint));
-    } else if(const Segment_3 *iseg = CGAL::object_cast<Segment_3 >(&obj))
+    if(const Segment_3 *iseg = CGAL::object_cast<Segment_3 >(&obj))
     {
       // Add segment constraint
       cdt.insert_constraint(P.to_2d(iseg->vertex(0)),P.to_2d(iseg->vertex(1)));
+    }else if(const Point_3 *ipoint = CGAL::object_cast<Point_3 >(&obj))
+    {
+      // Add point
+      cdt.insert(P.to_2d(*ipoint));
     } else if(const Triangle_3 *itri = CGAL::object_cast<Triangle_3 >(&obj))
     {
       // Add 3 segment constraints
@@ -953,11 +1172,11 @@ inline void igl::SelfIntersectMesh<Kernel>::projected_delaunay(
     {
       //cerr<<REDRUM("Poly...")<<endl;
       const std::vector<Point_3 > & poly = *polyp;
-      const int m = poly.size();
+      const Index m = poly.size();
       assert(m>=2);
-      for(int p = 0;p<m;p++)
+      for(Index p = 0;p<m;p++)
       {
-        const int np = (p+1)%m;
+        const Index np = (p+1)%m;
         cdt.insert_constraint(P.to_2d(poly[p]),P.to_2d(poly[np]));
       }
     }else

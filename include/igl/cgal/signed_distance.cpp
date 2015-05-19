@@ -9,6 +9,7 @@
 #include "../per_vertex_normals.h"
 #include "../per_edge_normals.h"
 #include "../per_face_normals.h"
+#include "../get_seconds.h"
 #include "point_mesh_squared_distance.h"
 
 
@@ -62,7 +63,7 @@ IGL_INLINE void igl::signed_distance(
       per_face_normals(V,F,FN);
       per_vertex_normals(V,F,PER_VERTEX_NORMALS_WEIGHTING_TYPE_ANGLE,FN,VN);
       per_edge_normals(
-        V,F,PER_EDGE_NORMALS_WEIGHTING_TYPE_UNIFORM,EN,E,EMAP);
+        V,F,PER_EDGE_NORMALS_WEIGHTING_TYPE_UNIFORM,FN,EN,E,EMAP);
       N.resize(P.rows(),3);
       break;
   }
@@ -281,6 +282,9 @@ IGL_INLINE void igl::signed_distance_winding_number(
 }
 
 #ifdef IGL_STATIC_LIBRARY
+// This template is necessary for the others to compile with clang
+// http://stackoverflow.com/questions/27748442/is-clangs-c11-support-reliable
+template void igl::signed_distance<CGAL::Epick>( const Eigen::MatrixXd & , const Eigen::MatrixXd & , const Eigen::MatrixXi & , const SignedDistanceType , Eigen::VectorXd & , Eigen::VectorXi &, Eigen::MatrixXd & , Eigen::MatrixXd & );
 template CGAL::Epick::FT igl::signed_distance_winding_number<CGAL::Epick>(CGAL::AABB_tree<CGAL::AABB_traits<CGAL::Epick, CGAL::AABB_triangle_primitive<CGAL::Epick, std::vector<CGAL::Triangle_3<CGAL::Epick>, std::allocator<CGAL::Triangle_3<CGAL::Epick> > >::iterator, CGAL::Boolean_tag<false> > > > const&, igl::WindingNumberAABB<Eigen::Matrix<double, 3, 1, 0, 3, 1> > const&, CGAL::Epick::Point_3 const&);
 template CGAL::Epick::FT igl::signed_distance_pseudonormal<CGAL::Epick>(CGAL::AABB_tree<CGAL::AABB_traits<CGAL::Epick, CGAL::AABB_triangle_primitive<CGAL::Epick, std::vector<CGAL::Triangle_3<CGAL::Epick>, std::allocator<CGAL::Triangle_3<CGAL::Epick> > >::iterator, CGAL::Boolean_tag<false> > > > const&, std::vector<CGAL::Triangle_3<CGAL::Epick>, std::allocator<CGAL::Triangle_3<CGAL::Epick> > > const&, Eigen::Matrix<int, -1, -1, 0, -1, -1> const&, Eigen::Matrix<double, -1, -1, 0, -1, -1> const&, Eigen::Matrix<double, -1, -1, 0, -1, -1> const&, Eigen::Matrix<double, -1, -1, 0, -1, -1> const&, Eigen::Matrix<int, -1, 1, 0, -1, 1> const&, CGAL::Epick::Point_3 const&);
 #endif

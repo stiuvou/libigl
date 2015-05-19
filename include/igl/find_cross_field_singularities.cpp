@@ -36,7 +36,7 @@ IGL_INLINE void igl::find_cross_field_singularities(const Eigen::PlainObjectBase
   {
     ///check that is on border..
     if (V_border[vid])
-      return;
+      continue;
 
     int missmatch=0;
     for (unsigned int i=0;i<VF[vid].size();i++)
@@ -69,7 +69,7 @@ IGL_INLINE void igl::find_cross_field_singularities(const Eigen::PlainObjectBase
 {
 
   Eigen::Matrix<typename DerivedV::Scalar, Eigen::Dynamic, 3> Handle_MMatch;
-  igl::cross_field_missmatch<DerivedV, DerivedF, DerivedO>(V, F, PD1, PD2, Handle_MMatch);
+  igl::cross_field_missmatch<DerivedV, DerivedF, DerivedO>(V, F, PD1, PD2, true, Handle_MMatch);
   igl::find_cross_field_singularities(V, F, Handle_MMatch, isSingularity, singularityIndex);
 }
 

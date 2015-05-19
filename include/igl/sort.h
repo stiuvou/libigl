@@ -30,28 +30,28 @@ namespace igl
   //   Y  m by n matrix whose entries are sorted
   //   IX  m by n matrix of indices so that if dim = 1, then in matlab notation
   //     for j = 1:n, Y(:,j) = X(I(:,j),j); end
-  template <typename DerivedX, typename DerivedIX>
+  template <typename DerivedX, typename DerivedY, typename DerivedIX>
   IGL_INLINE void sort(
     const Eigen::PlainObjectBase<DerivedX>& X,
     const int dim,
     const bool ascending,
-    Eigen::PlainObjectBase<DerivedX>& Y,
+    Eigen::PlainObjectBase<DerivedY>& Y,
     Eigen::PlainObjectBase<DerivedIX>& IX);
-  template <typename DerivedX, typename DerivedIX>
+  template <typename DerivedX, typename DerivedY, typename DerivedIX>
   // Only better if size(X,dim) is small
   IGL_INLINE void sort_new(
     const Eigen::PlainObjectBase<DerivedX>& X,
     const int dim,
     const bool ascending,
-    Eigen::PlainObjectBase<DerivedX>& Y,
+    Eigen::PlainObjectBase<DerivedY>& Y,
     Eigen::PlainObjectBase<DerivedIX>& IX);
   // Special case if size(X,dim) == 2
-  template <typename DerivedX, typename DerivedIX>
+  template <typename DerivedX, typename DerivedY, typename DerivedIX>
   IGL_INLINE void sort2(
     const Eigen::PlainObjectBase<DerivedX>& X,
     const int dim,
     const bool ascending,
-    Eigen::PlainObjectBase<DerivedX>& Y,
+    Eigen::PlainObjectBase<DerivedY>& Y,
     Eigen::PlainObjectBase<DerivedIX>& IX);
 
   // Act like matlab's [Y,I] = SORT(X) for std library vectors
@@ -65,10 +65,10 @@ namespace igl
   //   index_map  an index map such that sorted[i] = unsorted[index_map[i]]
   template <class T>
   IGL_INLINE void sort(
-      const std::vector<T> &unsorted,
-      const bool ascending,
-      std::vector<T> &sorted,
-      std::vector<size_t> &index_map);
+    const std::vector<T> &unsorted,
+    const bool ascending,
+    std::vector<T> &sorted,
+    std::vector<size_t> &index_map);
 
 }
 

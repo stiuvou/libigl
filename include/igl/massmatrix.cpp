@@ -8,6 +8,7 @@
 #include "massmatrix.h"
 #include "normalize_row_sums.h"
 #include "sparse.h"
+#include "doublearea.h"
 #include "repmat.h"
 #include <Eigen/Geometry>
 #include <iostream>
@@ -47,19 +48,12 @@ IGL_INLINE void igl::massmatrix(
     // loop over faces
     for(int i = 0;i<m;i++)
     {
-      l(i,0) = sqrt((V.row(F(i,1))-V.row(F(i,2))).array().pow(2).sum());
-      l(i,1) = sqrt((V.row(F(i,2))-V.row(F(i,0))).array().pow(2).sum());
-      l(i,2) = sqrt((V.row(F(i,0))-V.row(F(i,1))).array().pow(2).sum());
+      l(i,0) = (V.row(F(i,1))-V.row(F(i,2))).norm();
+      l(i,1) = (V.row(F(i,2))-V.row(F(i,0))).norm();
+      l(i,2) = (V.row(F(i,0))-V.row(F(i,1))).norm();
     }
-    // semiperimeters
-    Matrix<Scalar,Dynamic,1> s = l.rowwise().sum()*0.5;
-    assert(s.rows() == m);
-    // Heron's forumal for area
-    Matrix<Scalar,Dynamic,1> dblA(m);
-    for(int i = 0;i<m;i++)
-    {
-      dblA(i) = 2.0*sqrt(s(i)*(s(i)-l(i,0))*(s(i)-l(i,1))*(s(i)-l(i,2)));
-    }
+    Matrix<Scalar,Dynamic,1> dblA;
+    doublearea(l,dblA);
 
     switch(eff_type)
     {
