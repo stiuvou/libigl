@@ -1,6 +1,7 @@
 .PHONY: all
 
 # Shared flags etc.
+LIBIGL_USE_STATIC_LIBRARY=1
 include ../../build/Makefile.conf
 LIBIGL_LIB+=-liglbbw -liglcgal
 
