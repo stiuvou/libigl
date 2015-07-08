@@ -48,4 +48,4 @@ obj/%.o: $(SRC_DIR)/%.cpp $(SRC_DIR)/%.h
 
 clean:
 	rm -f $(OBJ_FILES)
-	rm -f ../lib/libiglmatlab.a
+	rm -f ../lib/libiglviewer.a
